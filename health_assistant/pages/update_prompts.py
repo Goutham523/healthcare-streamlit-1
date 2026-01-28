@@ -1,5 +1,6 @@
 # update_prompts.py
 import json
+from types import SimpleNamespace
 import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -12,8 +13,25 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 
+def must(name: str):
+    if name not in st.secrets:
+        raise RuntimeError(f"Missing secret: {name}")
+    return st.secrets[name]
+
+
+def load_settings_():
+    return SimpleNamespace(
+        db_host=must("HEALTHCARE_AI_DB_HOST"),
+        db_port=int(st.secrets.get("HEALTHCARE_AI_DB_PORT", 5432)),
+        db_name=must("HEALTHCARE_AI_DB_BASE"),
+        db_user=must("HEALTHCARE_AI_DB_USER"),
+        db_password=must("HEALTHCARE_AI_DB_PASS"),
+        db_sslmode=st.secrets.get("HEALTHCARE_AI_DB_SSLMODE", "require"),
+    )
+
+
 def _get_conn():
-    s = load_settings()
+    s = load_settings_()
     return psycopg2.connect(
         host=s.db_host,
         port=s.db_port,
