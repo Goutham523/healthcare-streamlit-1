@@ -1,17 +1,47 @@
+############################
 # Python
+############################
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 
-# Virtual env
+############################
+# Virtual Environments
+############################
 venv/
 .venv/
 
-# Env / secrets
+############################
+# Environment / Secrets
+############################
 .env
 .env.*
+health_assistant/.env
+.streamlit/secrets.toml
+
+############################
+# Streamlit
+############################
 .streamlit/
 
-# OS / IDE
-.DS_Store
+############################
+# Logs / Temp
+############################
+*.log
+tmp/
+temp/
+
+############################
+# IDE / OS
+############################
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
+
+############################
+# Python tooling
+############################
+.pytest_cache/
+.mypy_cache/
