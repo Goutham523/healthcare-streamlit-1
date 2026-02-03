@@ -117,11 +117,41 @@ def render_chat() -> None:
         role = msg.get("role", "assistant")
         mtype = msg.get("type", "chat")
         content = msg.get("content", "")
+
         with st.chat_message(role):
+
+            # 1️⃣ Cardset placeholder
             if mtype == "cardset":
-                st.write(
-                    "Cardset was sent earlier. Fill the questions below (if shown)."
-                )
+                st.info("Questionnaire sent. Please answer below.")
+
+            # 2️⃣ FINAL SUMMARY (THIS IS THE NEW PART)
+            elif mtype == "summary":
+                summary = content if isinstance(content, dict) else json.loads(content)
+
+                st.subheader("🧾 Health Summary")
+
+                st.markdown("### 🧠 What might be causing this")
+                st.write(summary["what_is_the_cause"])
+
+                st.markdown("### 🧭 What you can do next")
+                st.write(summary["what_to_do_next"])
+
+                st.markdown("### 🗓 Daily care plan")
+                care = summary["care_plan"]
+                st.markdown(f"**{care['title']}**")
+
+                for part in ["morning", "afternoon", "evening", "night"]:
+                    steps = care["routine"].get(part, [])
+                    if steps:
+                        st.markdown(f"**{part.capitalize()}**")
+                        for s in steps:
+                            st.write(f"- {s}")
+
+                st.markdown("### 🚦 Severity")
+                st.write(f"**{summary['severity'].capitalize()}**")
+                st.caption(summary["severity_reason"])
+
+            # 3️⃣ Normal chat
             else:
                 st.write(content)
 
@@ -146,7 +176,12 @@ def render_chat() -> None:
                     )
 
             if st.form_submit_button("Submit answers"):
-                resp = client.submit_cardset(int(st.session_state.user_id), answers)
+                resp = client.submit_cardset(
+                    user_id=int(st.session_state.user_id),
+                    session_id=st.session_state.session_id,
+                    answers=answers,
+                )
+
                 st.session_state.last_api_response = resp
                 st.session_state.server_messages = client.get_history(
                     int(st.session_state.user_id)
@@ -157,9 +192,15 @@ def render_chat() -> None:
     prompt = st.chat_input("Type a message…")
     if prompt:
         resp = client.post_chat(int(st.session_state.user_id), prompt)
+
+        # 🔥 THIS LINE GOES HERE
+        st.session_state.session_id = resp.get("session_id")
+
         st.session_state.last_api_response = resp
+
         if resp.get("type") == "cardset":
             st.session_state.pending_cardset = resp.get("questions", [])
+
         st.session_state.server_messages = client.get_history(
             int(st.session_state.user_id)
         )
